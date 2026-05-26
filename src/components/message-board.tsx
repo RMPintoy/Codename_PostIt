@@ -58,12 +58,11 @@ function formatDateStamp(value: string) {
 
 export function MessageBoard({
   initialMessages,
-  viewerId,
 }: {
   initialMessages: MessageRecord[];
-  viewerId: string;
 }) {
   const [messages, setMessages] = useState(initialMessages);
+  const [viewerId, setViewerId] = useState("");
   const [body, setBody] = useState("");
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [status, setStatus] = useState("");
@@ -71,6 +70,22 @@ export function MessageBoard({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
+    const loadViewer = async () => {
+      try {
+        const response = await fetch("/api/viewer", { cache: "no-store" });
+        if (!response.ok) {
+          return;
+        }
+
+        const viewer = (await response.json()) as { senderId?: string };
+        if (viewer.senderId) {
+          setViewerId(viewer.senderId);
+        }
+      } catch {
+        // Keep default fallback if the viewer lookup fails.
+      }
+    };
+
     const refreshMessages = async () => {
       try {
         const response = await fetch("/api/messages", { cache: "no-store" });
@@ -85,6 +100,7 @@ export function MessageBoard({
       }
     };
 
+    void loadViewer();
     const timer = window.setInterval(refreshMessages, 4000);
 
     return () => window.clearInterval(timer);
