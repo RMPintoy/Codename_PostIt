@@ -330,7 +330,7 @@ export function MessageBoard({
             <h2 className={styles.panelTitle}>Send a polished message</h2>
             <p className={styles.panelCopy}>
               Your codename is assigned automatically from your IP. Just write,
-              format, and attach files.
+              format, and attach files up to 4 MB each.
             </p>
           </div>
 
