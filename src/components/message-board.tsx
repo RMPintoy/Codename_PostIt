@@ -68,6 +68,7 @@ export function MessageBoard({
   const [status, setStatus] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const loadViewer = async () => {
@@ -162,6 +163,27 @@ export function MessageBoard({
     setPendingFiles(Array.from(event.target.files ?? []));
   };
 
+  const removePendingFile = (indexToRemove: number) => {
+    setPendingFiles((currentFiles) => {
+      const nextFiles = currentFiles.filter(
+        (_, fileIndex) => fileIndex !== indexToRemove,
+      );
+
+      if (nextFiles.length === 0 && fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+
+      return nextFiles;
+    });
+  };
+
+  const clearPendingFiles = () => {
+    setPendingFiles([]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const uploadAttachments = async () => {
     if (pendingFiles.length === 0) {
       return [] as MessageAttachment[];
@@ -222,15 +244,47 @@ export function MessageBoard({
       setPendingFiles([]);
       setStatus("Message posted.");
 
-      const fileInput = document.getElementById("attachments") as
-        | HTMLInputElement
-        | null;
-      if (fileInput) {
-        fileInput.value = "";
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
       }
     } catch (error) {
       setStatus(
         error instanceof Error ? error.message : "Could not send the message.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleClearMessages = async () => {
+    const confirmed = window.confirm(
+      "Clear every message for everyone? This cannot be undone.",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setStatus("");
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/messages", {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as
+          | { error?: string }
+          | null;
+        throw new Error(payload?.error ?? "Could not clear messages.");
+      }
+
+      setMessages([]);
+      setStatus("All messages were cleared.");
+    } catch (error) {
+      setStatus(
+        error instanceof Error ? error.message : "Could not clear messages.",
       );
     } finally {
       setIsSubmitting(false);
@@ -259,12 +313,8 @@ export function MessageBoard({
           </header>
 
           <div className={styles.subhead}>
-            Everyone gets a stable animal codename based on IP. Your own posts
-            stay on the right, everyone else stays on the left.
-          </div>
-
-          <div className={styles.subhead}>
-            Deployment marker: private-blob-v2
+            Everyone gets a stable animal codename for their device. Your own
+            posts stay on the right, everyone else stays on the left.
           </div>
 
           <div className={styles.messages}>
@@ -352,7 +402,7 @@ export function MessageBoard({
             <span className={styles.panelEyebrow}>Composer</span>
             <h2 className={styles.panelTitle}>Send a polished message</h2>
             <p className={styles.panelCopy}>
-              Your codename is assigned automatically from your IP. Just write,
+              Your codename is assigned automatically for this device. Just write,
               format, and attach files up to 4 MB each.
             </p>
           </div>
@@ -420,16 +470,33 @@ export function MessageBoard({
                 id="attachments"
                 multiple
                 onChange={handleFilesChange}
+                ref={fileInputRef}
                 type="file"
               />
 
               {pendingFiles.length > 0 ? (
                 <div className={styles.fileList}>
-                  {pendingFiles.map((file) => (
+                  {pendingFiles.map((file, index) => (
                     <div className={styles.fileTag} key={`${file.name}-${file.size}`}>
-                      {file.name} - {formatFileSize(file.size)}
+                      <span>
+                        {file.name} - {formatFileSize(file.size)}
+                      </span>
+                      <button
+                        className={styles.removeFileButton}
+                        onClick={() => removePendingFile(index)}
+                        type="button"
+                      >
+                        Remove
+                      </button>
                     </div>
                   ))}
+                  <button
+                    className={styles.clearFilesButton}
+                    onClick={clearPendingFiles}
+                    type="button"
+                  >
+                    Remove all files
+                  </button>
                 </div>
               ) : null}
             </div>
@@ -450,6 +517,15 @@ export function MessageBoard({
               type="submit"
             >
               {isSubmitting ? "Posting..." : "Post message"}
+            </button>
+
+            <button
+              className={styles.clearMessagesButton}
+              disabled={isSubmitting}
+              onClick={handleClearMessages}
+              type="button"
+            >
+              Clear messages for everyone
             </button>
 
             <p className={styles.feedback}>{status}</p>

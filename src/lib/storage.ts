@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { get, list, put } from "@vercel/blob";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { del, get, list, put } from "@vercel/blob";
+import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { MessageAttachment, MessageRecord } from "@/lib/messages";
 
@@ -143,6 +143,40 @@ export async function readMessages() {
   }
 
   return readBlobMessages();
+}
+
+export async function clearStoredMessages() {
+  assertStorageReady();
+
+  if (usingLocalFileStorage()) {
+    await ensureLocalStorage();
+    await writeFile(messagesFile, JSON.stringify([], null, 2), "utf8");
+
+    try {
+      const uploadFiles = await readdir(uploadsDirectory);
+      await Promise.all(
+        uploadFiles.map((fileName) =>
+          rm(path.join(uploadsDirectory, fileName), { force: true }),
+        ),
+      );
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+        throw error;
+      }
+    }
+
+    return;
+  }
+
+  const { blobs } = await list({
+    limit: 1000,
+    mode: "expanded",
+    prefix: messagesBlobPrefix,
+  });
+
+  if (blobs.length > 0) {
+    await del(blobs.map((blob) => blob.url));
+  }
 }
 
 export async function appendMessage(input: {

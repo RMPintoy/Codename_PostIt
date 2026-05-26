@@ -312,11 +312,39 @@
 }
 
 .fileTag {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
   padding: 10px 12px;
   border-radius: 14px;
   background: rgba(243, 247, 255, 1);
   color: #4d6588;
   font-size: 0.92rem;
+}
+
+.removeFileButton,
+.clearFilesButton,
+.clearMessagesButton {
+  appearance: none;
+  border: none;
+  border-radius: 999px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.removeFileButton {
+  padding: 8px 12px;
+  background: rgba(22, 54, 95, 0.08);
+  color: #28466f;
+  white-space: nowrap;
+}
+
+.clearFilesButton {
+  justify-self: start;
+  padding: 10px 14px;
+  background: rgba(22, 54, 95, 0.08);
+  color: #28466f;
 }
 
 .preview {
@@ -351,6 +379,14 @@
   cursor: progress;
   opacity: 0.7;
   transform: none;
+}
+
+.clearMessagesButton {
+  width: 100%;
+  padding: 14px 18px;
+  background: rgba(184, 52, 34, 0.08);
+  color: #9f2f20;
+  border: 1px solid rgba(184, 52, 34, 0.12);
 }
 
 .feedback {

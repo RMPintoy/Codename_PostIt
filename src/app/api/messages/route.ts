@@ -4,7 +4,7 @@ import {
   getSenderIdentity,
   viewerCookieName,
 } from "@/lib/identity";
-import { createMessage, listMessages } from "@/lib/messages";
+import { clearMessages, createMessage, listMessages } from "@/lib/messages";
 
 export async function GET() {
   try {
@@ -80,6 +80,21 @@ export async function POST(request: NextRequest) {
       {
         error:
           error instanceof Error ? error.message : "Could not save the message.",
+      },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE() {
+  try {
+    await clearMessages();
+    return NextResponse.json([]);
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error ? error.message : "Could not clear messages.",
       },
       { status: 500 },
     );

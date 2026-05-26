@@ -1,4 +1,4 @@
-import { appendMessage, getUploadsDirectory, readMessages } from "@/lib/storage";
+import { appendMessage, clearStoredMessages, readMessages } from "@/lib/storage";
 
 export type MessageAttachment = {
   id: string;
@@ -30,4 +30,8 @@ export async function createMessage(input: {
   attachments: MessageAttachment[];
 }) {
   return appendMessage(input);
+}
+
+export async function clearMessages() {
+  return clearStoredMessages();
 }
