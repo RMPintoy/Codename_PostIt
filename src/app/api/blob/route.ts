@@ -1,4 +1,3 @@
-import { head } from "@vercel/blob";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -10,8 +9,26 @@ export async function GET(request: Request) {
   }
 
   try {
-    const blob = await head(url);
-    const response = await fetch(blob.downloadUrl, { cache: "no-store" });
+    const blobUrl = new URL(url);
+
+    if (!blobUrl.hostname.endsWith(".blob.vercel-storage.com")) {
+      return NextResponse.json({ error: "Invalid blob URL." }, { status: 400 });
+    }
+
+    const token = process.env.BLOB_READ_WRITE_TOKEN;
+    if (!token) {
+      return NextResponse.json(
+        { error: "Blob token is not configured." },
+        { status: 500 },
+      );
+    }
+
+    const response = await fetch(blobUrl.toString(), {
+      cache: "no-store",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
     if (!response.ok || !response.body) {
       return NextResponse.json(
@@ -24,6 +41,10 @@ export async function GET(request: Request) {
     headers.set(
       "Content-Type",
       response.headers.get("content-type") || "application/octet-stream",
+    );
+    headers.set(
+      "Content-Disposition",
+      response.headers.get("content-disposition") || "inline",
     );
     headers.set(
       "Cache-Control",
