@@ -75,12 +75,12 @@ export async function POST(request: Request) {
           `uploads/${storedName}`,
           Buffer.from(await file.arrayBuffer()),
           {
-          access: "public",
-          addRandomSuffix: false,
-          contentType: file.type || "application/octet-stream",
+            access: "private",
+            addRandomSuffix: false,
+            contentType: file.type || "application/octet-stream",
           },
         );
-        url = blob.url;
+        url = `/api/blob?url=${encodeURIComponent(blob.url)}`;
       }
 
       attachments.push({
