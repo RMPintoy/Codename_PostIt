@@ -247,6 +247,10 @@ export function MessageBoard({
             stay on the right, everyone else stays on the left.
           </div>
 
+          <div className={styles.subhead}>
+            Deployment marker: private-blob-v2
+          </div>
+
           <div className={styles.messages}>
             {messages.length === 0 ? (
               <div className={styles.empty}>
