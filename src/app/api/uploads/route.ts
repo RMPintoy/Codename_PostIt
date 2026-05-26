@@ -13,7 +13,14 @@ import {
 const maxUploadSize = 4 * 1024 * 1024;
 
 function sanitizeFileName(fileName: string) {
-  return fileName.replace(/[^a-zA-Z0-9._-]/g, "-");
+  const normalized = fileName
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\w.-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  return normalized || "file";
 }
 
 export async function POST(request: Request) {
@@ -55,7 +62,7 @@ export async function POST(request: Request) {
       const basename = path.basename(file.name, extension);
       const storedName = `${Date.now()}-${randomUUID()}-${sanitizeFileName(
         basename,
-      )}${sanitizeFileName(extension)}`;
+      )}${sanitizeFileName(extension).toLowerCase()}`;
 
       let url: string;
 
@@ -64,11 +71,15 @@ export async function POST(request: Request) {
         await writeFile(path.join(uploadsDirectory, storedName), buffer);
         url = `/uploads/${storedName}`;
       } else {
-        const blob = await put(`uploads/${storedName}`, file, {
+        const blob = await put(
+          `uploads/${storedName}`,
+          Buffer.from(await file.arrayBuffer()),
+          {
           access: "public",
           addRandomSuffix: false,
           contentType: file.type || "application/octet-stream",
-        });
+          },
+        );
         url = blob.url;
       }
 

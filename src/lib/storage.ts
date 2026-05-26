@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { BlobPreconditionFailedError, get, put } from "@vercel/blob";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -119,7 +120,7 @@ export async function appendMessage(input: {
   attachments: MessageAttachment[];
 }) {
   const message: MessageRecord = {
-    id: crypto.randomUUID(),
+    id: randomUUID(),
     senderId: input.senderId,
     codename: input.codename,
     body: input.body,
@@ -154,12 +155,16 @@ export async function appendMessage(input: {
     currentMessages.push(message);
 
     try {
-      await put(messagesBlobPath, JSON.stringify(currentMessages, null, 2), {
+      await put(
+        messagesBlobPath,
+        Buffer.from(JSON.stringify(currentMessages, null, 2), "utf8"),
+        {
         access: "private",
         allowOverwrite: true,
         contentType: "application/json",
         ifMatch: current?.blob.etag,
-      });
+        },
+      );
 
       return message;
     } catch (error) {
