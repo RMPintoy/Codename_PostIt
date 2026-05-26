@@ -48,22 +48,8 @@ const animals = [
   "Sparrow",
 ];
 
-export function getClientIp(source: Headers | Request["headers"]) {
-  const forwardedFor = source.get("x-forwarded-for");
-  if (forwardedFor) {
-    return forwardedFor.split(",")[0]?.trim() || "local";
-  }
-
-  return (
-    source.get("x-real-ip") ||
-    source.get("cf-connecting-ip") ||
-    source.get("fly-client-ip") ||
-    "local"
-  );
-}
-
-export function getSenderIdentity(ipAddress: string) {
-  const hash = createHash("sha256").update(ipAddress).digest("hex");
+export function getSenderIdentity(viewerId: string) {
+  const hash = createHash("sha256").update(viewerId).digest("hex");
   const adjectiveIndex = parseInt(hash.slice(0, 8), 16) % adjectives.length;
   const animalIndex = parseInt(hash.slice(8, 16), 16) % animals.length;
 

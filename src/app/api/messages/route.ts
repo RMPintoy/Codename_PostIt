@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  getClientIp,
   getOrCreateViewerId,
   getSenderIdentity,
   viewerCookieName,
@@ -42,7 +41,7 @@ export async function POST(request: NextRequest) {
     const viewerId = getOrCreateViewerId(
       request.cookies.get(viewerCookieName)?.value,
     );
-    const { senderId, codename } = getSenderIdentity(getClientIp(request.headers));
+    const { senderId, codename } = getSenderIdentity(viewerId);
 
     if (body.length === 0 && attachments.length === 0) {
       return NextResponse.json(

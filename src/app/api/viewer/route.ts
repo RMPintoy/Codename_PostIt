@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  getClientIp,
   getOrCreateViewerId,
   getSenderIdentity,
   viewerCookieName,
@@ -8,8 +7,10 @@ import {
 
 export async function GET(request: NextRequest) {
   try {
-    const viewer = getSenderIdentity(getClientIp(request.headers));
-    const viewerId = getOrCreateViewerId(request.cookies.get(viewerCookieName)?.value);
+    const viewerId = getOrCreateViewerId(
+      request.cookies.get(viewerCookieName)?.value,
+    );
+    const viewer = getSenderIdentity(viewerId);
     const response = NextResponse.json({
       viewerId,
       senderId: viewer.senderId,
