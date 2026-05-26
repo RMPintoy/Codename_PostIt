@@ -77,9 +77,9 @@ export function MessageBoard({
           return;
         }
 
-        const viewer = (await response.json()) as { senderId?: string };
-        if (viewer.senderId) {
-          setViewerId(viewer.senderId);
+        const viewer = (await response.json()) as { viewerId?: string };
+        if (viewer.viewerId) {
+          setViewerId(viewer.viewerId);
         }
       } catch {
         // Keep default fallback if the viewer lookup fails.
@@ -274,7 +274,7 @@ export function MessageBoard({
               </div>
             ) : (
               messages.map((message) => {
-                const isOwnMessage = message.senderId === viewerId;
+                const isOwnMessage = message.senderDeviceId === viewerId;
 
                 return (
                   <article

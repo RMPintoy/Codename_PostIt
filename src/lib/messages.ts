@@ -11,6 +11,7 @@ export type MessageAttachment = {
 export type MessageRecord = {
   id: string;
   senderId: string;
+  senderDeviceId: string;
   codename: string;
   body: string;
   attachments: MessageAttachment[];
@@ -23,6 +24,7 @@ export async function listMessages() {
 
 export async function createMessage(input: {
   senderId: string;
+  senderDeviceId: string;
   codename: string;
   body: string;
   attachments: MessageAttachment[];

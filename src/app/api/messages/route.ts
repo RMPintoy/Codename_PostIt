@@ -1,5 +1,10 @@
-import { NextResponse } from "next/server";
-import { getClientIp, getSenderIdentity } from "@/lib/identity";
+import { NextRequest, NextResponse } from "next/server";
+import {
+  getClientIp,
+  getOrCreateViewerId,
+  getSenderIdentity,
+  viewerCookieName,
+} from "@/lib/identity";
 import { createMessage, listMessages } from "@/lib/messages";
 
 export async function GET() {
@@ -17,7 +22,7 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const payload = (await request.json()) as {
       body?: string;
@@ -34,6 +39,9 @@ export async function POST(request: Request) {
     const attachments = Array.isArray(payload.attachments)
       ? payload.attachments
       : [];
+    const viewerId = getOrCreateViewerId(
+      request.cookies.get(viewerCookieName)?.value,
+    );
     const { senderId, codename } = getSenderIdentity(getClientIp(request.headers));
 
     if (body.length === 0 && attachments.length === 0) {
@@ -52,13 +60,22 @@ export async function POST(request: Request) {
 
     await createMessage({
       senderId,
+      senderDeviceId: viewerId,
       codename,
       body,
       attachments: attachments.slice(0, 5),
     });
 
     const messages = await listMessages();
-    return NextResponse.json(messages);
+    const response = NextResponse.json(messages);
+    response.cookies.set(viewerCookieName, viewerId, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: true,
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+    });
+    return response;
   } catch (error) {
     return NextResponse.json(
       {

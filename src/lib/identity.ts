@@ -1,4 +1,6 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
+
+export const viewerCookieName = "postit_viewer_id";
 
 const adjectives = [
   "Amber",
@@ -69,4 +71,8 @@ export function getSenderIdentity(ipAddress: string) {
     senderId: hash.slice(0, 16),
     codename: `${adjectives[adjectiveIndex]} ${animals[animalIndex]}`,
   };
+}
+
+export function getOrCreateViewerId(currentValue?: string) {
+  return currentValue?.trim() || randomUUID();
 }

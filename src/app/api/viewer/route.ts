@@ -1,10 +1,30 @@
-import { NextResponse } from "next/server";
-import { getClientIp, getSenderIdentity } from "@/lib/identity";
+import { NextRequest, NextResponse } from "next/server";
+import {
+  getClientIp,
+  getOrCreateViewerId,
+  getSenderIdentity,
+  viewerCookieName,
+} from "@/lib/identity";
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     const viewer = getSenderIdentity(getClientIp(request.headers));
-    return NextResponse.json(viewer);
+    const viewerId = getOrCreateViewerId(request.cookies.get(viewerCookieName)?.value);
+    const response = NextResponse.json({
+      viewerId,
+      senderId: viewer.senderId,
+      codename: viewer.codename,
+    });
+
+    response.cookies.set(viewerCookieName, viewerId, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: true,
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+    });
+
+    return response;
   } catch (error) {
     return NextResponse.json(
       {

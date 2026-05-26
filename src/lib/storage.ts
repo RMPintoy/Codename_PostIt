@@ -42,6 +42,7 @@ export async function ensureLocalStorage() {
 type StoredMessage = MessageRecord & {
   author?: string;
   senderId?: string;
+  senderDeviceId?: string;
   codename?: string;
 };
 
@@ -50,6 +51,8 @@ function normalizeMessages(parsed: StoredMessage[]) {
     .map((message) => ({
       id: message.id,
       senderId: message.senderId || `legacy-${message.id}`,
+      senderDeviceId:
+        message.senderDeviceId || message.senderId || `legacy-${message.id}`,
       codename: message.codename || message.author || "Archive Otter",
       body: message.body,
       attachments: message.attachments || [],
@@ -144,6 +147,7 @@ export async function readMessages() {
 
 export async function appendMessage(input: {
   senderId: string;
+  senderDeviceId: string;
   codename: string;
   body: string;
   attachments: MessageAttachment[];
@@ -151,6 +155,7 @@ export async function appendMessage(input: {
   const message: MessageRecord = {
     id: randomUUID(),
     senderId: input.senderId,
+    senderDeviceId: input.senderDeviceId,
     codename: input.codename,
     body: input.body,
     attachments: input.attachments,
