@@ -34,6 +34,7 @@ dev-server-error.log
 
 # local app data
 /data/
+/public/uploads/
 
 # env files (can opt-in for committing if needed)
 .env*
